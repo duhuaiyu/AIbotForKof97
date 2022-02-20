@@ -1,0 +1,118 @@
+[
+   {
+      "port":":edge:joy:START",
+      "field":"2 Players Start"
+   },
+   {
+      "port":":edge:joy:START",
+      "field":"1 Player Start"
+   },
+   {
+      "port":":edge:joy:JOY2",
+      "field":"P2 Left"
+   },
+   {
+      "port":":edge:joy:JOY2",
+      "field":"P2 Button 1"
+   },
+   {
+      "port":":edge:joy:JOY2",
+      "field":"P2 Up"
+   },
+   {
+      "port":":edge:joy:JOY2",
+      "field":"P2 Right"
+   },
+   {
+      "port":":edge:joy:JOY2",
+      "field":"P2 Button 3"
+   },
+   {
+      "port":":edge:joy:JOY2",
+      "field":"P2 Button 2"
+   },
+   {
+      "port":":edge:joy:JOY2",
+      "field":"P2 Down"
+   },
+   {
+      "port":":edge:joy:JOY2",
+      "field":"P2 Button 4"
+   },
+   {
+      "port":":DSW",
+      "field":"COMM Setting (Link Enable)"
+   },
+   {
+      "port":":DSW",
+      "field":"Cabinet"
+   },
+   {
+      "port":":DSW",
+      "field":"Freeze"
+   },
+   {
+      "port":":DSW",
+      "field":"Free Play"
+   },
+   {
+      "port":":DSW",
+      "field":"Setting Mode"
+   },
+   {
+      "port":":DSW",
+      "field":"Controller"
+   },
+   {
+      "port":":DSW",
+      "field":"COMM Setting (Cabinet No.)"
+   },
+   {
+      "port":":TEST",
+      "field":"Service Mode"
+   },
+   {
+      "port":":AUDIO/COIN",
+      "field":"Coin 1"
+   },
+   {
+      "port":":AUDIO/COIN",
+      "field":"Coin 2"
+   },
+   {
+      "port":":AUDIO/COIN",
+      "field":"Service 1"
+   },
+   {
+      "port":":edge:joy:JOY1",
+      "field":"P1 Button 1"
+   },
+   {
+      "port":":edge:joy:JOY1",
+      "field":"P1 Button 4"
+   },
+   {
+      "port":":edge:joy:JOY1",
+      "field":"P1 Right"
+   },
+   {
+      "port":":edge:joy:JOY1",
+      "field":"P1 Up"
+   },
+   {
+      "port":":edge:joy:JOY1",
+      "field":"P1 Button 2"
+   },
+   {
+      "port":":edge:joy:JOY1",
+      "field":"P1 Button 3"
+   },
+   {
+      "port":":edge:joy:JOY1",
+      "field":"P1 Down"
+   },
+   {
+      "port":":edge:joy:JOY1",
+      "field":"P1 Left"
+   }
+]
