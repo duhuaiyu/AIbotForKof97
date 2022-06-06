@@ -5,8 +5,11 @@ from KofActions import Actions
 from collections import deque
 from PIL import Image, ImageOps
 import torchvision.transforms as ts
+import random
+import string
 import time
 import cv2
+import os
 
 
 # Combines the data of multiple time steps
@@ -37,6 +40,9 @@ def setup_memory_addresses():
         "2P_y": Address('0x108320', 'u16'),
         "1P_Action": Address('0x108172', 'u16'),
         "2P_Action": Address('0x108372', 'u16'),
+        "1P_CH": Address('0x108170', 'u16'),
+        "2P_CH": Address('0x108370', 'u16'),
+        "obj_cnt": Address('0x10c01e', 'u16'),
         # "action_queue_1": Address('0x10E79C', 'u8'),
         # "action_queue_2": Address('0x10E79D', 'u8'),
         # "action_queue_3": Address('0x10E79E', 'u8'),
@@ -68,29 +74,30 @@ def setup_memory_addresses():
         # "action_queue_26": Address('0x10E7B5', 'u8'),
         # "action_queue_27": Address('0x10E7B6', 'u8'),
         # "action_queue_28": Address('0x10E7B7', 'u8'),
+
+
         # "action_queue_29": Address('0x10E7B8', 'u8'),
         # "action_queue_30": Address('0x10E7B9', 'u8'),
         # "action_queue_31": Address('0x10E7BA', 'u8'),
         # "action_queue_32": Address('0x10E7BB', 'u8'),
-        #
         # "action_queue_33": Address('0x10E7BC', 'u8'),
         # "action_queue_34": Address('0x10E7BD', 'u8'),
         # "action_queue_35": Address('0x10E7BE', 'u8'),
         # "action_queue_36": Address('0x10E7BF', 'u8'),
+
         # "action_queue_37": Address('0x10E7C0', 'u8'),
         # "action_queue_38": Address('0x10E7C1', 'u8'),
         # "action_queue_39": Address('0x10E7C2', 'u8'),
         # "action_queue_40": Address('0x10E7C3', 'u8'),
-        #
         # "action_queue_41": Address('0x10E7C4', 'u8'),
         # "action_queue_42": Address('0x10E7C5', 'u8'),
         # "action_queue_43": Address('0x10E7C6', 'u8'),
         # "action_queue_44": Address('0x10E7C7', 'u8'),
+
         # "action_queue_45": Address('0x10E7C8', 'u8'),
         # "action_queue_46": Address('0x10E7C9', 'u8'),
         # "action_queue_47": Address('0x10E7CA', 'u8'),
         # "action_queue_48": Address('0x10E7CB', 'u8'),
-        #
         # "action_queue_49": Address('0x10E7CC', 'u8'),
         # "action_queue_50": Address('0x10E7CD', 'u8'),
         # "action_queue_51": Address('0x10E7CE', 'u8'),
@@ -100,7 +107,6 @@ def setup_memory_addresses():
         # "action_queue_54": Address('0x10E7D1', 'u8'),
         # "action_queue_55": Address('0x10E7D2', 'u8'),
         # "action_queue_56": Address('0x10E7D3', 'u8'),
-        #
         # "action_queue_57": Address('0x10E7D4', 'u8'),
         # "action_queue_58": Address('0x10E7D5', 'u8'),
         # "action_queue_59": Address('0x10E7D6', 'u8'),
@@ -234,7 +240,7 @@ class Kof97Environment(object):
         self.cumulateReward = 0
         self.curr_episode = self.curr_episode + 1
         #return self.frame_queue
-        return self.frame_queue
+        return frames
 
 
     def wait_for_waiting_scream(self):
@@ -254,11 +260,22 @@ class Kof97Environment(object):
         # print("playing", data["playing"], 'healthP1',
         #       data["healthP1"], 'healthP2', data["healthP2"])
         i = 0
+        code_160_cnt = 0
+        save_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=15))
         while data["playing"] != 32:
-            if i % 2 == 1 :
-                data = self.emu.step([Actions.P1_LEFT.value])
+            if data["playing"] == 160:
+                code_160_cnt +=1
+            if code_160_cnt > 200:
+                print("Saving.....")
+                save_dir = f"/home/duhuaiyu/KOF97Saves/CH{data['2P_CH']}"
+                os.makedirs(save_dir, exist_ok=True)
+                res = self.emu.console.writeln(f'manager:machine():save("/home/duhuaiyu/KOF97Saves/CH{data["2P_CH"]}/kof97save_CH_{save_id}")')
+                data = self.emu.step([])
             else:
-                data = self.emu.step([Actions.P1_LEFT.value,Actions.P1_A.value])
+                if i % 2 == 1 :
+                    data = self.emu.step([Actions.P1_LEFT.value])
+                else:
+                    data = self.emu.step([Actions.P1_LEFT.value,Actions.P1_A.value])
             # game stop
             # print("playing", data["playing"], 'healthP1',
             #       data["healthP1"], 'healthP2', data["healthP2"])
@@ -273,11 +290,13 @@ class Kof97Environment(object):
                     self.writer.add_scalar("Train_{}/AverageReward".format(self.env_id), self.cumulateReward/self.round, self.curr_episode)
                 return self.start()
             i = i +1
+            print(data["playing"],code_160_cnt)
+        # save
 
         self.expected_health = {"P1": data["healthP1"], "P2": data["healthP2"]}
         data = self.gather_frames([])
         #return data["frame"]
-        return self.frame_queue
+        return data
 
     def reset(self):
         if self.game_done:
@@ -290,6 +309,7 @@ class Kof97Environment(object):
             raise EnvironmentError("Reset called while gameplay still running")
 
     def loadRest(self,file):
+        "/home/duhuaiyu/kof97save"
         self.emu.console.writeln("manager:machine():load("+file+")")
 
     # To be called when a round finishes
@@ -359,13 +379,14 @@ class Kof97Environment(object):
         # "2P_y": Address('0x108320', 'u8'),
         # "1P_Action": Address('0x108172', 'u8'),
         # "2P_Action": Address('0x108372', 'u8'),
-        print("1P_x:",data["1P_x"],
-              "1P_y:",data["1P_y"],
-              "2P_x:",data["2P_x"],
-              "2P_y:",data["2P_y"],
-              "1P_Action:",data["1P_Action"],
-              "2P_Action:",data["2P_Action"]
-              )
+        # print("1P_x:",data["1P_x"],
+        #       "1P_y:",data["1P_y"],
+        #       "2P_x:",data["2P_x"],
+        #       "2P_y:",data["2P_y"],
+        #       "1P_Action:",data["1P_Action"],
+        #       "2P_Action:",data["2P_Action"],
+        #       "obj_cnt",data["obj_cnt"]
+        #       )
         self.cumulateReward = self.cumulateReward + data["rewards"]
         self.roundReward = self.roundReward + data["rewards"]
         self.check_action_queue(data)
@@ -402,16 +423,16 @@ class Kof97Environment(object):
     # Collects the specified amount of frames the agent requires before choosing an action
     def gather_frames(self, actions):
         data = self.sub_step(actions)
-        image = self.preprocess(Image.fromarray(data["frame"], 'RGB'))
-        self.frame_queue.append(image)
-        frames = [data["frame"]]
-        for i in range(self.frames_per_step - 1):
-            data = add_rewards(data, self.sub_step(actions))
-            frames.append(data["frame"])
-            image = self.preprocess(Image.fromarray(data["frame"], 'RGB'))
-            self.frame_queue.append(image)
-        #data["frame"] = frames[0] if self.frames_per_step == 1 else frames
-        data["frame"] = frames
+        #image = self.preprocess(Image.fromarray(data["frame"], 'RGB'))
+        #self.frame_queue.append(image)
+        # frames = [data["frame"]]
+        # for i in range(self.frames_per_step - 1):
+        #     data = add_rewards(data, self.sub_step(actions))
+        #     frames.append(data["frame"])
+        #     image = self.preprocess(Image.fromarray(data["frame"], 'RGB'))
+        #     self.frame_queue.append(image)
+        # #data["frame"] = frames[0] if self.frames_per_step == 1 else frames
+        # data["frame"] = frames
         return data
 
     # Steps the emulator along by one time step and feeds in any actions that require pressing
@@ -432,7 +453,8 @@ class Kof97Environment(object):
             "P2": (p1_diff-p2_diff)
         }
 
-        data["rewards"] = rewards["P1"]
+        reward = rewards["P1"]
+        data["rewards"] = reward
         # self.frame_queue.append(data["frame"] )
         #if data["rewards"] != 0:
         #    print("rewards",rewards,"healthP1",data["healthP1"],"healthP2",data["healthP2"],"playing",data["playing"])

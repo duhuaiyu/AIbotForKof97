@@ -10,11 +10,12 @@ from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.utils import set_random_seed
 from stable_baselines3.common.preprocessing import is_image_space
 from multiprocessing import Process, freeze_support, set_start_method
-from Kof97EnvironmentSR import Kof98Environment,ComboRewardCalculatorV3
+from Kof97EnvironmentSR import Kof98EnvironmentV2,ComboRewardCalculatorV3
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.ppo.policies import MlpPolicy
 from stable_baselines3.common.torch_layers import CombinedExtractor
 from Callback import VideoRecorderCallback
+from stable_baselines3.common.callbacks import CheckpointCallback
 def make_env(env_id, rank, seed=0):
     """
     Utility function for multiprocessed env.
@@ -34,10 +35,10 @@ def make_env(env_id, rank, seed=0):
     return _init
 
 def create_env():
-    env_res = Kof98Environment(rewardCalculator=ComboRewardCalculatorV3(distance_rate=0.01, time_rate=0.01, damage_rate_1p=1, damage_rate_2p=1.3))
+    env_res = Kof98EnvironmentV2()
     return env_res
 
-env_str = "product"
+env_str = "V2_env"
 
 if __name__ == '__main__':
     # env = gym.make("kof97:kof97-v0")
@@ -50,36 +51,20 @@ if __name__ == '__main__':
                          in range(num_cpu)]))
     log_dir = f"ts-log/{env_str}"
     os.makedirs(log_dir, exist_ok=True)
-    # env = VecMonitor(env,filename=log_dir)
-    # Stable Baselines provides you with make_vec_env() helper
-    # which does exactly the previous steps for you.
-    # You can choose between `DummyVecEnv` (usually faster) and `SubprocVecEnv`
-    evl_env = Monitor(create_env())
-    # params = {'n_steps': 1040, 'gamma': 0.8265071569055529, 'learning_rate': 2.7479590167434578e-05,
-    #           'clip_range': 0.3333600055564347, 'gae_lambda': 0.8935368177780704}
-
-    # Trail 47 2021-04-24
-    # params ={'batch_size': 16919, 'gamma': 0.8697867805123972, 'learning_rate': 1.8681700054486652e-05,
-    #  'clip_range': 0.1487316140897702, 'gae_lambda': 0.9494857182533598}
-    # trail = 47
-
-    # params ={'batch_size': 19042, 'gamma': 0.8607458351483496, 'learning_rate': 2.2514439904812116e-05,
-    #  'clip_range': 0.11385091895656232, 'gae_lambda': 0.8911754858643272}
-    # trail = 65
-
-    params ={'batch_size': 28815, 'gamma': 0.9254533886157719, 'learning_rate': 1.958232389849691e-05,
-     'clip_range': 0.3991136793393521, 'gae_lambda': 0.9893567426332022}
+    # evl_env = Monitor(create_env())
+    params ={'batch_size': 5000,  'learning_rate': 1.058232389849691e-04}
     trail = 71
-    model = PPO('MlpPolicy', env, verbose=1,tensorboard_log=log_dir,**params)
+    model = PPO('MultiInputPolicy', env, verbose=0,tensorboard_log=log_dir,**params)
     #model = PPO.load(f"opt_2/trial_{trail}_best_model.zip", env=env)
-    model = PPO.load(f"Kof97_1000000_2022-04-29", env=env)
-    video_recorder = VideoRecorderCallback(evl_env, render_freq=500_000,n_eval_episodes=10,deterministic=False)
-    model.learn(total_timesteps=50_000_000,tb_log_name="PPO_71_Train", reset_num_timesteps=False, callback=video_recorder)
+    # model = PPO.load(f"Kof97_1000000_2022-04-29", env=env)
+    checkpoint_callback = CheckpointCallback(save_freq=1_000_000, save_path='./logs/',
+                                             name_prefix='kof_model_v2_t3')
+    model.learn(total_timesteps=50_000_000,tb_log_name="PPO_V2_t3", reset_num_timesteps=True, callback=checkpoint_callback)
     print("finish learn")
     env.close()
-    evl_env.close()
+    # evl_env.close()
     print("finish close")
-    model.save("Kof97_PPO_P2")
+    model.save("Kof97_PPO_V2_t3")
     # obs = env.reset()
     # for _ in range(10000):
     #     action, _states = model.predict(obs)
