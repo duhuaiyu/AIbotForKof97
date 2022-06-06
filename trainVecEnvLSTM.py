@@ -52,14 +52,15 @@ if __name__ == '__main__':
                          in range(num_cpu)]))
     log_dir = f"ts-log/{env_str}"
     os.makedirs(log_dir, exist_ok=True)
-    params ={'batch_size': 5000,  'learning_rate': 1.958232389849691e-05}
+    #params ={'batch_size': 5000,  'learning_rate': 1.958232389849691e-05}
+    params = {'batch_size': 5000, 'learning_rate': 1.058232389849691e-04}
     trail = 71
     model = RecurrentPPO('MlpLstmPolicy', env, verbose=0,tensorboard_log=log_dir,**params)
-    checkpoint_callback = CheckpointCallback(save_freq=500_000, save_path='./logs/',
-                                             name_prefix='kof_model_lstm_t2')
-    model.learn(total_timesteps=50_000_000,tb_log_name="PPO_LSTM_t2", reset_num_timesteps=True, callback=checkpoint_callback)
+    checkpoint_callback = CheckpointCallback(save_freq=100_000, save_path='./logs/',
+                                             name_prefix='kof_model_lstm_t3')
+    model.learn(total_timesteps=30_000_000,tb_log_name="PPO_LSTM_t2", reset_num_timesteps=True, callback=checkpoint_callback)
     print("finish learn")
     env.close()
-    model.save("Kof97_PPO_LSTM_V2")
+    model.save("Kof97_PPO_LSTM_V3")
 
 

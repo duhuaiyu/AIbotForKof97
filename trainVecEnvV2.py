@@ -57,9 +57,9 @@ if __name__ == '__main__':
     model = PPO('MultiInputPolicy', env, verbose=0,tensorboard_log=log_dir,**params)
     #model = PPO.load(f"opt_2/trial_{trail}_best_model.zip", env=env)
     # model = PPO.load(f"Kof97_1000000_2022-04-29", env=env)
-    checkpoint_callback = CheckpointCallback(save_freq=1_000_000, save_path='./logs/',
+    checkpoint_callback = CheckpointCallback(save_freq=1_000_00, save_path='./logs/',
                                              name_prefix='kof_model_v2_t3')
-    model.learn(total_timesteps=50_000_000,tb_log_name="PPO_V2_t3", reset_num_timesteps=True, callback=checkpoint_callback)
+    model.learn(total_timesteps=30_000_000,tb_log_name="PPO_V2_t3", reset_num_timesteps=True, callback=checkpoint_callback)
     print("finish learn")
     env.close()
     # evl_env.close()
