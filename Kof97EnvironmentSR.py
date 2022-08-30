@@ -244,8 +244,10 @@ class Kof98Environment(gym.Env):
             "action_seq_2": Address('0x10E7C0', 'u64'),
             "action_seq_3": Address('0x10E7C8', 'u64'),
             "action_seq_4": Address('0x10E7D0', 'u64'),
+            # match time
+            "time": Address('0x10A83A', 'u8'),
         }
-    def __init__(self,roms_path = "roms/", basic_saving_dir = "/home/duhuaiyu/KOF97Saves", CH = "CH0",rewardCalculator = ComboRewardCalculatorV3(distance_rate=0.01,time_rate=0.01,damage_rate_1p=1,damage_rate_2p=1.3)):
+    def __init__(self,roms_path = "roms/", basic_saving_dir = "/home/duhuaiyu/KOF97Saves", CH = "CH26",rewardCalculator = ComboRewardCalculatorV3(distance_rate=0.01,time_rate=0.01,damage_rate_1p=1,damage_rate_2p=1.3),env_param={}):
 
 
         render = True
@@ -275,12 +277,13 @@ class Kof98Environment(gym.Env):
         observation_space_dim += (12*8) # input sequence, 8bits, 12 step
         self.observation_space = spaces.Box(low=-1.0, high=1.0, shape=(observation_space_dim, ), dtype=np.float32)
         print("env_id:"+env_id)
-        self.emu = Emulator(env_id, roms_path, "kof97", self.setup_memory_addresses(),debug=True,frame_ratio=2,render=render)
+        self.emu = Emulator(env_id, roms_path, "kof97", self.setup_memory_addresses(),debug=True,frame_ratio=2,render=render,**env_param)
         self.rewardCalculator = rewardCalculator
         self.basic_saving_dir = basic_saving_dir
         self.CH=CH
         self.full_saving_path = join(basic_saving_dir,CH)
         self.save_files = [f for f in listdir(self.full_saving_path) if isfile(join(self.full_saving_path, f))]
+        self.metadata = {"render.modes":["rgb_array"]}
         #print(self.save_files)
 
 
@@ -291,7 +294,7 @@ class Kof98Environment(gym.Env):
         #self.emu.console.writeln('manager:machine():load("/home/duhuaiyu/kof97save_CH0")')
         #self.emu.console.writeln('manager:machine():load("/home/duhuaiyu/kof97save02")')
         return self.preprocess(self.wait_for_fight_start())
-    def render(self, mode="human"):
+    def render(self, mode="rgb_array"):
         font = cv2.FONT_HERSHEY_SIMPLEX
         fontScale = 0.2
         if mode == "human":
@@ -507,14 +510,14 @@ class Kof98EnvironmentV2(Kof98Environment):
 
     act_queue_length = 36
     input_queue_length = 40
-    def __init__(self):
-        super(Kof98EnvironmentV2, self).__init__()
+    def __init__(self,roms_path = "roms/", basic_saving_dir = "/home/duhuaiyu/KOF97Saves", CH = "CH0",reset_delay = 0 ,rewardCalculator = ComboRewardCalculatorV3(distance_rate=0.01,time_rate=0.01,damage_rate_1p=1,damage_rate_2p=1.3),env_param={}):
+        super(Kof98EnvironmentV2, self).__init__(roms_path,basic_saving_dir,CH,rewardCalculator,env_param)
         self.p1_act_seque = deque([ [0 for j in range (512)] for i in range(Kof98EnvironmentV2.act_queue_length)] ,maxlen=Kof98EnvironmentV2.act_queue_length)
         self.p2_act_seque = deque([ [0 for j in range (512)] for i in range(Kof98EnvironmentV2.act_queue_length)] ,maxlen=Kof98EnvironmentV2.act_queue_length)
-        #self.input_seque = deque([ [0 for j in range (8)] for i in range(Kof98EnvironmentV2.input_queue_length)] ,maxlen=Kof98EnvironmentV2.input_queue_length)
         self.act_img_size = [Kof98EnvironmentV2.act_queue_length , 512 , 1]
         self.input_size = [Kof98EnvironmentV2.input_queue_length, 256, 1]
         self.vector_size = 2 * 9 + 1
+        self.reset_delay = reset_delay
         self.observation_space = gym.spaces.Dict(
             spaces={
                 "vec": gym.spaces.Box(-1, 1, (self.vector_size,), dtype=np.float64),
@@ -596,7 +599,6 @@ class Kof98EnvironmentV2(Kof98Environment):
         return binary_res
 
     def reset(self):
-
         self.p1_act_seque = deque([[0 for j in range(512)] for i in range(Kof98EnvironmentV2.act_queue_length)],
                                   maxlen=Kof98EnvironmentV2.act_queue_length)
         self.p2_act_seque = deque([[0 for j in range(512)] for i in range(Kof98EnvironmentV2.act_queue_length)],
@@ -631,6 +633,9 @@ class Kof98EnvironmentLSTM(Kof98Environment):
             "1P_Action": Address('0x108172', 'u16'),
             "2P_Action": Address('0x108372', 'u16'),
 
+            # match time
+            "time": Address('0x10A83A', 'u8'),
+
             # action sequence
             # "action_seq_0": Address('0x10E7B0', 'u64'),
             # "action_seq_1": Address('0x10E7B8', 'u64'),
@@ -639,8 +644,8 @@ class Kof98EnvironmentLSTM(Kof98Environment):
             # "action_seq_4": Address('0x10E7D0', 'u64'),
         }
 
-    def __init__(self):
-        super(Kof98EnvironmentLSTM, self).__init__()
+    def __init__(self,roms_path = "roms/", basic_saving_dir = "/home/duhuaiyu/KOF97Saves", CH = "CH0",rewardCalculator = ComboRewardCalculatorV3(distance_rate=0.01,time_rate=0.01,damage_rate_1p=1,damage_rate_2p=1.3),env_param={}):
+        super(Kof98EnvironmentLSTM, self).__init__(roms_path,basic_saving_dir,CH,rewardCalculator,env_param)
         observation_space_dim = 0
         observation_space_dim+= 9 # health, x, y , pow, pow star,  MAX Mode, combo
         observation_space_dim+= 512 # action space
