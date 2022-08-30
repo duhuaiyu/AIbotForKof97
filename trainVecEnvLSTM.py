@@ -55,12 +55,22 @@ if __name__ == '__main__':
     #params ={'batch_size': 5000,  'learning_rate': 1.958232389849691e-05}
     params = {'batch_size': 5000, 'learning_rate': 1.058232389849691e-04}
     trail = 71
-    model = RecurrentPPO('MlpLstmPolicy', env, verbose=0,tensorboard_log=log_dir,**params)
-    checkpoint_callback = CheckpointCallback(save_freq=100_000, save_path='./logs/',
-                                             name_prefix='kof_model_lstm_t3')
-    model.learn(total_timesteps=30_000_000,tb_log_name="PPO_LSTM_t2", reset_num_timesteps=True, callback=checkpoint_callback)
+
+    policy_kwargs = {
+        'n_lstm_layers' :2,
+        'lstm_hidden_size':1024,
+        'shared_lstm':True,
+        'enable_critic_lstm':False
+    }
+    #model = RecurrentPPO.load(f"Kof97_PPO_LSTM_layer1_1536", env=env)
+
+    model = RecurrentPPO('MlpLstmPolicy', env, verbose=0,tensorboard_log=log_dir,**params,policy_kwargs=policy_kwargs)
+    #model = RecurrentPPO.load(f"Kof97_PPO_LSTM_layer1_768_2", env=env)
+    checkpoint_callback = CheckpointCallback(save_freq=50_000, save_path='./logs/',
+                                             name_prefix='Kof97_PPO_LSTM_layer2_1024_new')
+    model.learn(total_timesteps=10_000_000,tb_log_name="Kof97_PPO_LSTM_layer2_1024_new", reset_num_timesteps=True, callback=checkpoint_callback)
     print("finish learn")
     env.close()
-    model.save("Kof97_PPO_LSTM_V3")
+    model.save("Kof97_PPO_LSTM_layer2_1024_new")
 
 

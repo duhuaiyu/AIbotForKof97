@@ -54,17 +54,18 @@ if __name__ == '__main__':
     # evl_env = Monitor(create_env())
     params ={'batch_size': 5000,  'learning_rate': 1.058232389849691e-04}
     trail = 71
-    model = PPO('MultiInputPolicy', env, verbose=0,tensorboard_log=log_dir,**params)
+    #model = PPO('MultiInputPolicy', env, verbose=0,tensorboard_log=log_dir,**params)
     #model = PPO.load(f"opt_2/trial_{trail}_best_model.zip", env=env)
-    # model = PPO.load(f"Kof97_1000000_2022-04-29", env=env)
+    model = PPO.load(f"Kof97_PPO_V2_t3_1_transfer_CH16", env=env)
+    model.learning_rate = 3.058232389849691e-04
     checkpoint_callback = CheckpointCallback(save_freq=1_000_00, save_path='./logs/',
-                                             name_prefix='kof_model_v2_t3')
-    model.learn(total_timesteps=30_000_000,tb_log_name="PPO_V2_t3", reset_num_timesteps=True, callback=checkpoint_callback)
+                                             name_prefix='Kof97_PPO_V2_t3_1_transfer_CH26')
+    model.learn(total_timesteps=30_000_000,tb_log_name="PPO_V2_t3_transfer_CH26", reset_num_timesteps=True, callback=checkpoint_callback)
     print("finish learn")
     env.close()
     # evl_env.close()
     print("finish close")
-    model.save("Kof97_PPO_V2_t3")
+    model.save("Kof97_PPO_V2_t3_1_transfer_CH26")
     # obs = env.reset()
     # for _ in range(10000):
     #     action, _states = model.predict(obs)
